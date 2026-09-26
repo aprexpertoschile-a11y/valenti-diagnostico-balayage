@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>VALENTI · Diagnóstico Balayage</title>
+<style>
+:root{--black:#111;--gold:#b99a55;--bg:#f7f7f5;--line:#ddd}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#171717}
+.wrap{max-width:620px;margin:auto;padding:24px 18px 40px}.card{background:#fff;border-radius:22px;padding:24px;box-shadow:0 8px 30px #00000010}
+header{text-align:center;margin-bottom:22px;background:#111;border-radius:16px;padding:14px} header img{width:100%;max-width:330px;height:92px;object-fit:cover;object-position:center} h1{font-size:25px;margin:10px 0 5px;font-weight:600;letter-spacing:.3px} .sub{color:#666;font-size:14px}
+label{display:block;font-weight:600;font-size:14px;margin:18px 0 8px} input,select,textarea{width:100%;padding:14px;border:1px solid var(--line);border-radius:12px;background:#fff;font-size:16px;outline:none} input:focus,select:focus,textarea:focus{border-color:var(--gold)} button{width:100%;border:0;border-radius:14px;padding:15px;background:var(--black);color:#fff;font-size:16px;font-weight:700;margin-top:22px} button:disabled{opacity:.55}.note{font-size:12px;color:#777;margin-top:14px;line-height:1.45}.ok{display:none;text-align:center;padding:30px 10px}.ok h2{margin:0 0 10px}.error{display:none;color:#a00000;background:#fff0f0;border-radius:10px;padding:10px;margin-top:14px;font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="card">
+<header>
+  <img id="logo" src="logo-valenti.jpeg" alt="VALENTI HAIR SALON">
+  <h1>Diagnóstico Balayage</h1>
+  <div class="sub">Completa estos datos para evaluar tu cabello.</div>
+</header>
+
+<form id="form">
+<label>Nombre y apellido</label>
+<input name="nombre" required autocomplete="name">
+
+<label>Teléfono</label>
+<input name="telefono" required type="tel" autocomplete="tel">
+
+<label>¿Cómo está actualmente tu cabello?</label>
+<select name="cabello_actual" required>
+<option value="">Selecciona una opción</option>
+<option>Natural</option>
+<option>Tintura</option>
+<option>Mechas / Balayage</option>
+<option>Decoloración</option>
+<option>Tinte oscuro / negro</option>
+</select>
+
+<label>¿Qué procesos químicos has realizado?</label>
+<select name="procesos_quimicos" required>
+<option value="">Selecciona una opción</option>
+<option>Tintura</option>
+<option>Decoloración</option>
+<option>Alisado / Keratina</option>
+<option>Henna</option>
+<option>Ninguno</option>
+</select>
+
+<label>Fecha aproximada del último proceso químico</label>
+<input name="ultimo_proceso" type="date" required>
+
+<label>¿Cómo sientes tu cabello actualmente?</label>
+<select name="estado_cabello" required>
+<option value="">Selecciona una opción</option>
+<option>Bueno</option>
+<option>Seco</option>
+<option>Muy seco</option>
+<option>Quebradizo</option>
+<option>Elástico</option>
+</select>
+
+<button id="send" type="submit">Enviar diagnóstico</button>
+<div class="error" id="error"></div>
+<div class="note">Después de revisar tus respuestas, VALENTI podrá solicitarte fotografías por WhatsApp si son necesarias para completar la evaluación.</div>
+</form>
+
+<div class="ok" id="ok">
+<h2>¡Gracias!</h2>
+<p>Recibimos tus datos correctamente.</p>
+<p>VALENTI revisará tu información y se pondrá en contacto contigo si necesita fotografías adicionales.</p>
+</div>
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/appwrite@17.0.2"></script>
+<script>
+const {Client, TablesDB, ID} = Appwrite;
+const client = new Client()
+  .setEndpoint('https://fra.cloud.appwrite.io/v1')
+  .setProject('6ab72cfd003e11063378');
+const tablesDB = new TablesDB(client);
+
+const form = document.getElementById('form');
+const send = document.getElementById('send');
+const errorBox = document.getElementById('error');
+
+form.addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  errorBox.style.display='none';
+  send.disabled=true;
+  send.textContent='Enviando...';
+
+  const fd = new FormData(form);
+  const data = {
+    nombre: String(fd.get('nombre')||'').trim(),
+    telefono: String(fd.get('telefono')||'').trim(),
+    cabello_actual: String(fd.get('cabello_actual')||''),
+    procesos_quimicos: String(fd.get('procesos_quimicos')||''),
+    ultimo_proceso: String(fd.get('ultimo_proceso')||''),
+    estado_cabello: String(fd.get('estado_cabello')||''),
+    foto_id: ''
+  };
+
+  try {
+    await tablesDB.createRow({
+      databaseId:'6ab72f630003229be618',
+      tableId:'6ab72f63003229be618',
+      rowId:ID.unique(),
+      data
+    });
+    form.style.display='none';
+    document.getElementById('ok').style.display='block';
+  } catch(err) {
+    console.error(err);
+    errorBox.textContent='No pudimos enviar el formulario. Revisa tu conexión e inténtalo nuevamente.';
+    errorBox.style.display='block';
+    send.disabled=false;
+    send.textContent='Enviar diagnóstico';
+  }
+});
+</script>
+</body>
+</html>
